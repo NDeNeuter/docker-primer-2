@@ -1,0 +1,9 @@
+FROM debian:latest
+
+RUN apt-get update && apt-get install -y \
+    cowsay \
+    && rm -rf /var/lib/apt/lists/*
+
+# CMD ["/bin/bash"]
+
+CMD cowsay "Time is an illusion. Lunchtime doubly so."
