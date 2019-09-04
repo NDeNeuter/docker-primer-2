@@ -455,10 +455,10 @@ pre[data-line] .line-highlight[data-end]:after {
 <li><a href="#shell-form-vs-exec-form">Shell form vs exec form</a></li>
 <li><a href="#backslashes-in-shell-syntax">Backslashes in shell syntax</a></li>
 <li><a href="#best-practices-and-efficient-images">Best practices and efficient images</a></li>
+<li><a href="#background-processes">Background processes</a></li>
 </ul>
 </li>
 <li><a href="#managing-data">Managing data</a></li>
-<li><a href="#"></a></li>
 <li><a href="#practicalities">Practicalities</a></li>
 <li><a href="#updating-data-in-a-volume">Updating data in a volume</a></li>
 <li><a href="#when-things-go-wrong">When things go wrong</a></li>
@@ -470,7 +470,7 @@ pre[data-line] .line-highlight[data-end]:after {
 <h1 class="mume-header" id="a-brief-introduction-to-docker">A brief introduction to Docker</h1>
 
 <p>Docker is an open-source containerization tool. It allows you to package and run an application (or even just a script or a simple command) in a <em>container</em>, an isolated sandbox that runs on your host (local) operating system (OS). The container will not only contain the application itself, but also all of its dependencies, including a (stripped-down) operating system.</p>
-<p>Containers are often used for deploying application on a server, since they are straight-forward to migrate and scale-up, but they can also be a real asset in reproducible science! By providing a docker image of your application or even just an analysis pipeline, others will be able to run the code in the exact same environment you original implemented it.</p>
+<p>Containers are often used for deploying application on a server, since they are straight-forward to migrate and scale-up, but they can also be a real asset in reproducible science! By providing a docker image of your application or even just an analysis pipeline, others will be able to run the code in the exact same environment you originally implemented it.</p>
 <p><img src="assets/containers.jpeg" alt></p>
 <p>They are similar to virtual machines (VMs), but there are two distinguishing features that set them apart (<a href="https://docs.docker.com/get-started/#containers-and-virtual-machines">see official docs</a>). First of all, from a technical standpoint, containers perform fewer emulation tasks since they share the host OS&apos; kernel.<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> A process running in a container will use the same amount of memory as a native process. VMs on the other hand rely on virtualized hardware to run a completely isolated guest OS. Secondly, while virtual machines are often used in an interactive manner, by providing the user with a full OS-in-a-box that they can use just like a standard desktop, containers are intended to run as one-off instances, but more on that later.</p>
 <h3 class="mume-header" id="a-few-definitions">A few definitions</h3>
@@ -516,7 +516,7 @@ pre[data-line] .line-highlight[data-end]:after {
 <ol>
 <li><code>docker run</code> attempts to launch a container.</li>
 <li>The container is based on the image named <code>debian</code>.</li>
-<li><code>-it</code> is a flag that tells docker to redirect the container&apos;s input/output/error streams to our host&apos;s terminal.</li>
+<li><code>-it</code> is a flag that tells docker to redirect the container&apos;s input/output/error streams to our host&apos;s terminal. <code>--rm</code> removes the container after it has finished running.</li>
 </ol>
 <p>Don&apos;t worry though, we&apos;ll go over everything in more detail step by step. Starting with...</p>
 <h2 class="mume-header" id="images">Images</h2>
@@ -571,7 +571,7 @@ docker run debian <span class="token function">ls</span> -l /home
 
 <p>Most of the time we want to run a container in the background, but there are a few situations where interaction can be useful. Debugging is one of them. Trying out small parts of an image you are creating is another.</p>
 <p>The easiest way is to pass the <code>-it</code> flag (allocates a tty) and specify a shell command such as <code>sh</code> (for the minimal <code>busybox</code> images) or <code>bash</code> (in most of the linux-based images). Give it a try!</p>
-<pre class="language-text">docker run --it debian bash
+<pre class="language-text">docker run -it debian bash
 </pre>
 <p><small>Use <code>&lt;ctrl&gt;+d</code> or type <code>exit</code> to leave (and shut down) the container.</small></p>
 <p>This is quite useful whenever you&apos;re unsure of the exact file structure your image has. I.e., you can write a Dockerfile, add some files, then run it interactively to see if everything is where it&apos;s supposed to be. In a similar vein, I&apos;ve found it useful to figure out file permissions and user ids.</p>
@@ -692,33 +692,22 @@ ENTRYPOINT [&quot;bash&quot;, &quot;./scripts/pizza-time.sh&quot;]
     s3cmd=1.1.* \
 &amp;&amp; rm -rf /var/lib/apt/lists/*
 </pre>
+<h3 class="mume-header" id="background-processes">Background processes</h3>
+
+<p>Sometimes you want processes to run in the background, i.e. you do not want all the output to appear on your terminal. To do that, you can use the <code>-d/--detach</code> flag.</p>
 <h2 class="mume-header" id="managing-data">Managing data</h2>
 
-<p>COPY statements</p>
-<p>volumes</p>
-<p>run<br>
-container ls --all<br>
-image ls</p>
-<p>ocker run -it busybox sh</p>
-<p>--it processes</p>
-<p>EPHEREMAL</p>
-<p>rm -rf /</p>
-<p>deleting containers</p>
-<hr>
-<p>images<br>
-containers ephemeral list --all</p>
-<p>system pruning</p>
-<p>dockerfiles</p>
-<p>docker-compose</p>
-<p>pull</p>
-<p>run</p>
-<p>down/stop remove container or not?</p>
-<p>name containers</p>
-<p>image size</p>
-<p>permissions</p>
-<p>compose -&gt; yaml anchors</p>
-<h2 class="mume-header" id></h2>
-
+<p>You&apos;ve seen that you can use a <code>COPY</code> statement to get files into your container. And you also know that containers are temporary. So does that imply you lose all of the output your process generates?</p>
+<p>That brings us to <em>volumes</em>. A complete overview is given in <a href="https://docs.docker.com/storage/volumes/">the docs</a>.</p>
+<p>There are two types of volumes: bind mounts and named volumes.</p>
+<p>With bind mounts, you mount a directory on your host machine on top of a directory inside of your container.</p>
+<div class="code-chunk" data-id="code-chunk-id-7" data-cmd="bash"><div class="input-div"><pre data-role="codeBlock" data-info="bash {code_chunk_offset=7, cmd=true}" class="language-bash"><span class="token function">mkdir</span> -P bind_mount_test
+<span class="token function">touch</span> bind_mount_test/krang
+docker run -it --rm -v /my/local/dir:/container/dir
+</pre><div class="btn-group"><div class="run-btn btn"><span>&#x25B6;&#xFE0E;</span></div><div class="run-all-btn btn">all</div></div><div class="status">running...</div></div><div class="output-div"></div></div><p>What is important to take note of here is that the bind mount will override anything that is in your container. For example, suppose we have a statement like <code>COPY . /src</code> in our Dockerfile (which would initialise a directory in the image located in <code>/src</code> containing all files in your local working directory). However, when you bind mount something on top of <code>/src</code>, it will override its contents. This ensures that you never accidentally wipe data on your host machine by replacing it with things inside an image. Remember, the image is self-sufficient and contains all information it would ever require, your host machine is not.</p>
+<p>Also note that the first filepath (the one on the host machine), cannot be a relative path, it must be the full filepath.</p>
+<p>Named volumes are the second type of volume. Instead of mounting a host directory, they simply give a name to a directory inside of your container. After the container is finished (and/or removed), the volume will remain. You can then later mount it again or retrieve data from it directly. They use the same syntax as bind mounts, but replace the first filepath into a name, e.g. <code>-v my_volume:/my/container/path</code>.</p>
+<p>Finally, there is also an option to copy data directly into a <em>running</em> container: <a href="https://docs.docker.com/engine/reference/commandline/cp/">https://docs.docker.com/engine/reference/commandline/cp/</a>.</p>
 <h2 class="mume-header" id="practicalities">Practicalities</h2>
 
 <p>A few notes about installing and setting up docker. Permission denied =&gt; sudo group</p>
@@ -787,10 +776,10 @@ containers ephemeral list --all</p>
 <li><a href="#shell-form-vs-exec-form">Shell form vs exec form</a></li>
 <li><a href="#backslashes-in-shell-syntax">Backslashes in shell syntax</a></li>
 <li><a href="#best-practices-and-efficient-images">Best practices and efficient images</a></li>
+<li><a href="#background-processes">Background processes</a></li>
 </ul>
 </li>
 <li><a href="#managing-data">Managing data</a></li>
-<li><a href="#"></a></li>
 <li><a href="#practicalities">Practicalities</a></li>
 <li><a href="#updating-data-in-a-volume">Updating data in a volume</a></li>
 <li><a href="#when-things-go-wrong">When things go wrong</a></li>
