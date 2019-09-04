@@ -82,7 +82,7 @@ They are similar to virtual machines (VMs), but there are two distinguishing fea
 We'll first create a very simple docker application, and then delve into its components step by step.
 
 ```
-docker run -it --rm debian echo "Hello world!"
+docker run -it --rm debian echo 'Hello world!'
 ```
 
 ```
@@ -178,7 +178,7 @@ Containers are short-lived. They are created after a specific state of a system 
 We can demonstrate this behaviour by running two containers in a row.
 
 ```bash {cmd=true}
-docker run debian tee "cowabunga!" /home/pizza
+docker run debian tee 'cowabunga!' /home/pizza
 docker run debian ls -l /home
 ```
 
@@ -194,7 +194,7 @@ Most of the time we want to run a container in the background, but there are a f
 
 The easiest way is to pass the `-it` flag (allocates a tty) and specify a shell command such as `sh` (for the minimal `busybox` images) or `bash` (in most of the linux-based images). Give it a try!
 
-    docker run --it debian bash
+    docker run -it debian bash
 
 <small>Use `<ctrl>+d` or type `exit` to leave (and shut down) the container.</small>
 
